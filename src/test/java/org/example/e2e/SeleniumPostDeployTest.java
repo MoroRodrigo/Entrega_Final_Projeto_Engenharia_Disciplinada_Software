@@ -39,13 +39,12 @@ public class SeleniumPostDeployTest {
 
         ChromeOptions options = new ChromeOptions();
 
-        // CONFIGURAÇÕES CRÍTICAS PARA GITHUB ACTIONS (LINUX SEM INTERFACE GRÁFICA)
-        options.addArguments("--headless=new"); // Modo sem janela (obrigatório no CI)
+        options.addArguments("--headless=new");
         options.addArguments("--disable-gpu");
-        options.addArguments("--no-sandbox"); // Necessário para rodar como root/container
-        options.addArguments("--disable-dev-shm-usage"); // Evita falhas de memória compartilhada no Docker
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--remote-allow-origins=*");
-        options.addArguments("--window-size=1920,1080"); // Define um tamanho de tela padrão
+        options.addArguments("--window-size=1920,1080");
 
         driver = new ChromeDriver(options);
 
@@ -59,39 +58,42 @@ public class SeleniumPostDeployTest {
 
     @Test
     void testarFluxoCompletoDeCriacaoDeProdutoEmProducao() {
-        // Prioriza a URL de produção do ambiente; caso contrário, usa o localhost do Spring
-        String baseUrl = System.getenv().getOrDefault("PROD_URL", "http://localhost:" + port);
+        String baseUrl = System.getenv("PROD_URL");
 
-        // Garante que não haverá barras duplas na URL
+        // Se a variável estiver vazia no GitHub, usamos o local como fallback
+        if (baseUrl == null || baseUrl.isEmpty() || baseUrl.isBlank()) {
+            baseUrl = "http://localhost:" + port;
+            System.out.println("AVISO: PROD_URL não encontrada. Usando fallback local: " + baseUrl);
+        }
+
+        // Garante que a URL comece com http (evita o InvalidArgumentException)
+        if (!baseUrl.startsWith("http")) {
+            baseUrl = "http://" + baseUrl;
+        }
+
+        // Limpa barras duplicadas
         if (baseUrl.endsWith("/")) {
             baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
 
         String finalUrl = baseUrl + "/produtos";
 
-        System.out.println("--------------------------------------------------");
-        System.out.println("EXECUTANDO TESTE E2E NO ENDEREÇO: " + finalUrl);
-        System.out.println("--------------------------------------------------");
+        System.out.println("URL FINAL PARA TESTE: " + finalUrl);
 
         try {
-            driver.get(finalUrl);
+            driver.get(finalUrl); // Se a URL não for válida, o erro ocorre aqui
 
-            // Interação utilizando o Page Object Model (POM)
-            produtoPage.preencherNome("Teclado Mecânico Custom CI");
-            produtoPage.preencherPreco("450.00");
+            produtoPage.preencherNome("Teclado Teste CI");
+            produtoPage.preencherPreco("100.00");
             produtoPage.selecionarCategoria("ELETRONICO");
             produtoPage.clicarAdicionar();
 
-            // Validação com mensagem de erro customizada para o log do Maven
-            boolean existe = produtoPage.existeProdutoNaLista("Teclado Mecânico Custom CI");
-
-            assertTrue(existe, "FALHA CRÍTICA: O produto não foi encontrado na tabela após o salvamento em: " + finalUrl);
-
-            System.out.println("SUCESSO: Produto cadastrado e visualizado corretamente.");
+            assertTrue(produtoPage.existeProdutoNaLista("Teclado Teste CI"),
+                    "Produto não encontrado na URL: " + finalUrl);
 
         } catch (Exception e) {
-            System.err.println("ERRO DURANTE EXECUÇÃO DO SELENIUM: " + e.getMessage());
-            throw e; // Lança novamente para o JUnit marcar o teste como falho
+            System.err.println("FALHA AO ACESSAR A URL: " + finalUrl);
+            throw e;
         }
     }
 

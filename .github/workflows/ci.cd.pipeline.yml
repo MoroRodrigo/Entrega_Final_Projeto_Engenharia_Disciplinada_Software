@@ -86,9 +86,7 @@ jobs:
         env:
           PROD_URL: ${{ vars.PROD_URL }}
         run: |
-          mvn test -Dtest=SeleniumPostDeployTest \
-                   -DfailIfNoTests=false \
-                   -Dspring.main.banner-mode=off
+          mvn test -Dtest=SeleniumPostDeployTest -DfailIfNoTests=false
 
       - name: Relatório de Integridade Pós-Deploy
         if: success()
