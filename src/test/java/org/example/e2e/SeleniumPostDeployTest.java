@@ -11,6 +11,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.time.Duration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,13 +32,15 @@ public class SeleniumPostDeployTest {
         WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");
+        options.addArguments("--headless=new");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--remote-allow-origins=*");
 
         driver = new ChromeDriver(options);
         produtoPage = new ProdutoPage(driver); // Inicialização do POM
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
     }
 
     @Test
