@@ -3,31 +3,58 @@ package org.example.e2e.pages;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 public class ProdutoPage {
-    private WebDriver driver;
+    private final WebDriver driver;
+    private final WebDriverWait wait;
 
     public ProdutoPage(WebDriver driver) {
         this.driver = driver;
+        // Configura uma espera explícita de até 10 segundos
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
     public void preencherNome(String nome) {
-        driver.findElement(By.id("input-nome")).sendKeys(nome);
+        WebElement campoNome = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("input-nome")));
+        campoNome.clear();
+        campoNome.sendKeys(nome);
     }
 
     public void preencherPreco(String preco) {
-        driver.findElement(By.id("input-preco")).sendKeys(preco);
+        WebElement campoPreco = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("input-preco")));
+        campoPreco.clear();
+        campoPreco.sendKeys(preco);
     }
 
     public void selecionarCategoria(String categoria) {
-        driver.findElement(By.id("select-categoria")).sendKeys(categoria);
+        WebElement selectCategoria = wait.until(ExpectedConditions.elementToBeClickable(By.id("select-categoria")));
+        selectCategoria.sendKeys(categoria);
     }
 
     public void clicarAdicionar() {
-        driver.findElement(By.id("btn-salvar")).click();
+        WebElement botaoSalvar = wait.until(ExpectedConditions.elementToBeClickable(By.id("btn-salvar")));
+        botaoSalvar.click();
     }
 
+    /**
+     * Verifica se o produto aparece na tabela.
+     * Utiliza uma espera para garantir que o DOM foi atualizado após o clique no botão.
+     */
     public boolean existeProdutoNaLista(String nome) {
-        return driver.findElement(By.id("tabela-produtos")).getText().contains(nome);
+        try {
+            // Aguarda até que a tabela esteja visível
+            WebElement tabela = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tabela-produtos")));
+
+            // Dá um pequeno fôlego para o render do Thymeleaf processar o novo item
+            // (Útil em ambientes de CI/CD mais lentos)
+            return wait.until(d -> tabela.getText().contains(nome));
+        } catch (Exception e) {
+            System.err.println("Erro ao localizar produto na lista: " + e.getMessage());
+            return false;
+        }
     }
 }
