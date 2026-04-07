@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema CRUD - Produtos</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .btn-del { color: red; }
+    </style>
+</head>
+<body>
+<h1>Gerenciamento de Produtos</h1>
+
+<fieldset>
+    <legend>Novo Produto</legend>
+    <form th:action="@{/produtos}" method="post">
+        <input type="text" name="nome" placeholder="Nome" required id="input-nome">
+        <input type="number" step="0.01" name="precoBase" placeholder="Preço" required id="input-preco">
+        <select name="categoria" id="select-categoria">
+            <option value="ELETRONICO">Eletrônico</option>
+            <option value="VESTUARIO">Vestuário</option>
+            <option value="ALIMENTACAO">Alimentação</option>
+        </select>
+        <button type="submit" id="btn-salvar">Adicionar</button>
+    </form>
+</fieldset>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Preço Final</th>
+        <th>Ações</th>
+    </tr>
+    </thead>
+    <tbody id="tabela-produtos">
+    <tr th:each="p : ${produtos}">
+        <td th:text="${p.id}"></td>
+        <td th:text="${p.nome}"></td>
+        <td th:text="${p.getPrecoFinal()}"></td>
+        <td>
+            <form th:action="@{/produtos/deletar/{id}(id=${p.id})}" method="post" style="display:inline;">
+                <button type="submit" class="btn-del">Excluir</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
